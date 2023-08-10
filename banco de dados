@@ -1,0 +1,84 @@
+database_url = 'sqlite:///Imperial_bank.db'
+engine = create_engine(database_url, echo=True)
+
+session = sessionmaker(bind=engine)
+session = Session
+
+base = declarative_base()
+
+class Cliente(base):
+
+    __tablename__ = 'clientes'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    nome = Column(String(100), nullable=False)
+    cpf = Column(String, nullable=False)
+    endereço = Column(String(130), nullable=False)
+    email = Column(String(150))
+
+class Conta(base):
+
+    __tablename__ = 'conta_bancaria'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    tipo = Column(String(30), nullable=False)
+    agencia = Column(String(30), nullable=False)
+    clientes_id = Column(ForeignKey('clientes.id'))
+    saldo = Column(Float, nullable=False)
+    numero_conta = relationship('Cliente')
+
+    def nova_conta(self):
+        conta = self.agencia , self.id
+        return conta
+
+
+base.metadata.create_all(bind=engine)
+
+with Session(engine) as session:
+
+    Fabio = Cliente(nome='Fábio Carrara', endereço='rua cantareira, n° 385',
+                    cpf='1234', email='fab@email.com')
+
+    Fernanda = Cliente(nome='Fernanda Oliveira', endereço='rua principal, n° 472',
+                       cpf='1245', email='fer.nanda@email.com')
+
+session.add_all([Fabio])
+session.add_all([Fernanda])
+session.commit()
+
+print('\033[1;31m\nRecuperando informações de clientes: \033[0;32m')
+users = session.query(Cliente).all()
+for user in users:
+    print(user.nome, user.email)
+
+with Session(engine) as session:
+
+    Fabio = Conta(tipo='conta corrente', agencia='356/8',
+                  saldo=1860.65)
+
+session.add_all([Fabio])
+session.commit()
+
+Fabio.nova_conta()
+print('\nGerando uma nova conta corrente...')
+print(Fabio.nova_conta())
+
+conta = session.query(Conta).all()
+print('\033[1;31m\nInformações referentes a contas: \033[0;32m')
+for dados in conta:
+    print(dados.saldo)
+
+with Session(engine) as session:
+
+    Fernanda = Conta(tipo='conta corrente', agencia='394/7',
+                     saldo=2465.55)
+
+session.add_all([Fernanda])
+session.commit()
+
+Fernanda.nova_conta()
+
+conta = session.query(Conta).all()
+print('\033[1;31m\nRecuperando informações referentes a contas: \033[0;32m')
+for novos_dados in conta:
+    print(novos_dados.saldo, novos_dados.nova_conta())
